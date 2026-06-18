@@ -1,0 +1,1153 @@
+\documentclass[12pt]{article} 
+\usepackage[margin=1.2in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{bm}
+\usepackage{microtype}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{fontawesome}
+\usepackage[autostyle]{csquotes}
+\MakeOuterQuote{"}
+
+% ----- Theorem environments -----
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{lemma}[definition]{Lemma}
+\newtheorem{corollary}[definition]{Corollary}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+% ----- Section formatting -----
+\titleformat{\section}
+  {\large\bfseries}  
+  {\thesection.}{0.5em}{}
+
+\titleformat{\subsection}
+  {\normalsize\bfseries} 
+  {\thesubsection.}{0.5em}{}
+
+% ----- Spacing -----
+\setlength{\parskip}{0.5em}  
+\setlength{\parindent}{0pt}  
+\linespread{1}            
+
+% ----- Title formatting -----
+\makeatletter
+\renewcommand{\maketitle}{
+  \begin{center}
+    {\Large\bfseries\@title\par}
+    \vspace{0.5em}
+    {\normalsize\@author\par}
+    {\normalsize\@date\par}
+  \end{center}
+  \vspace{0.5em}
+}
+% ----- Abstract formatting -----
+\renewenvironment{abstract}{
+  \begin{center}
+    \textbf{Abstract}
+  \end{center}
+  \begin{quotation}\small
+}{
+  \end{quotation}
+}
+% ----- Table of Contents formatting -----
+\usepackage{tocloft}
+
+\setlength{\cftbeforesecskip}{2pt}   % space before section entries
+\setlength{\cftbeforetoctitleskip}{0pt}
+\setlength{\cftaftertoctitleskip}{5pt}
+
+\makeatother
+
+\begin{document}
+
+\title{An Introduction to It\^{o}'s Lemma}
+\author{Camden Hosler\\Northwestern University}
+\date{June 1, 2026}
+
+\maketitle
+
+\begin{abstract}
+  Brownian motion is a fundamental stochastic process used to model systems influenced by random fluctuations, including diffusion phenomena in physics and price dynamics in financial markets.  More broadly, Brownian motion provides a rigorous bridge between discrete random processes and continuous-in-time stochastic processes, enabling a more precise treatment of randomness in the applied sciences.  This expository paper introduces Brownian Motion via scaling of random walks and introductory measure theory and uses this as a framework to motivate stochastic calculus.  More specifically, we explore Quadratic Variation and its effect in evaluating stochastic integrals ending with a discussion of applications in finance and physics.  This paper assumes familiarity with basic set theory and some ideas from introductory analysis.  For more details, the reader can refer to the first two chapters of Understanding Analysis by Abbott and An Infinite Descent into Pure Mathematics by Newstead \cite{Abbott, InfiniteDescent}. 
+\end{abstract}
+
+\tableofcontents
+
+\section{An Introduction to Measure Theory}
+
+\subsection{Introductory Probability}
+Suppose we want to assign probabilities to subsets or "events" of some sample space $\Omega$.  Then let that collection of events be $\mathcal{F}$.  We then want to define some probability measure $P: \mathcal{F} \to [0,1]$ which satisfies the below axioms of probability where $A$ represents an arbitrary event and $A_i$ represents the ith event:
+
+\[
+    P(\Omega) =1, \quad P(A) \geq 0, \quad P \left( \bigcup_{i=1}^\infty A_i \right) = \sum_{i=1}^\infty P(A_i)  \text{ for pairwise disjoint subsets $A_i$}
+\]
+
+Note that $P(A^c) = 1-P(A)$ can be derived from the above.  However in order to make this assignment well defined, we cannot in general assign probabilities to every subset of a sample space $\Omega$, as certain properties of the subsets are assumed to be true in the above laws.  Instead, we restrict $\mathcal{F}$ to be a collection of subsets that is stable under the basic operations of probability theory, namely complements and unions motivating the following structure.
+
+\begin{definition}
+Let $S$ be a set and $\mathcal{F}$ be a collection of subsets of $S$ then $\mathcal{F}$ is an \textit{algebra} if it satisfies the following:
+\vspace{-0.25cm}
+\begin{enumerate}[label=(\roman*)]
+    \item $S \in \mathcal{F}$
+    \item If $F \in \mathcal{F}$, then $F^c \in \mathcal{F}$
+    \item If $F \in \mathcal{F}$ and $G \in \mathcal{F}$ then $F \cup G \in \mathcal{F}$
+\end{enumerate}
+\end{definition}
+
+The last law, however, can be generalized to any countable union.
+\begin{definition}
+Let $\mathcal{F}$ be an algebra on a set $S$.  Then $\mathcal{F}$ is a \textit{$\sigma$-algebra} if for any sequence $F_n : F_n \in \mathcal{F}, n \in \mathbb{N}$:
+
+\[
+    \bigcup_{n=1}^\infty F_n \in \mathcal{F}
+\]
+
+\end{definition}
+
+Then by the above definitions note that for any algebra $\Sigma$:
+\vspace{-0.25cm}
+\begin{enumerate}
+    \item $\emptyset \in \Sigma$ since $\emptyset = S^c$
+    \item If $F \in \Sigma$ and $G \in \Sigma$ then $F \cap G \in \Sigma$ since $F \cap G = (F^c \cup G^c)^c$ 
+\end{enumerate}
+And that for any $\sigma$-algebra $\mathcal{F}$
+\vspace{-0.25cm}
+\begin{enumerate}
+    \item $\emptyset \in \mathcal{F}$
+    \item For any sequence $F_n \mid F_n \in \mathcal{F}, n \in \mathbb{N}$:
+    \[
+           \bigcap_{n=1}^\infty F_n \in \mathcal{F}   
+    \]
+
+\end{enumerate}
+
+
+\begin{definition}
+Let $\mathcal{A}$ be a collection of subsets of a set S.  The $\sigma$-algebra \textit{generated by} $\mathcal{A}$, denoted $\sigma(\mathcal{A})$ is the smallest possible $\sigma$-algebra such that $\mathcal{A} \subseteq \sigma(\mathcal{A})$.
+\end{definition}
+
+\begin{definition}
+Let $S$ be a set and $\mathfrak{T} \subseteq \mathcal{P}(S)$ where $\mathcal{P}(S)$ is the power set of $S$.  Then $\mathfrak{T}$ is the \textit{topology} on $S$ and the pair $(S,\mathfrak{T})$ is a \textit{topological space} if the following axioms are satisfied:
+\begin{enumerate}[label=(\roman*)]
+    \item $\emptyset \in \mathfrak{T}$
+    \item $\bigcup_{i \in I} U_i \in \mathfrak{T},\quad \forall U_i \in \mathfrak{T}$
+    \item $\bigcap_{i=1}^{n} U_i \in \mathfrak{T}, \quad\forall U_i \in \mathfrak{T} \text{ such that } n \in \mathbb{N}$
+\end{enumerate}
+
+\end{definition}
+
+\begin{definition}
+Let $S$ be a topological space.  The \textit{Borel $\sigma$-algebra}, $\mathfrak{B}(S)$ on $S$ is the $\sigma$-algebra generated by the open sets of $S$.  That is,
+\[
+    \mathfrak{B}(S)=\sigma(\mathfrak{T}) 
+\]
+where $\mathfrak{T}$ is the topology on $S$.
+\end{definition}
+
+For our purposes, it is sufficient to think of the standard topology on $\mathbb{R}$ as the collection of all open sets, each of which can be expressed as a union of open intervals.  Note that since each $\sigma$-algebra must also include the complement of each element the Borel $\sigma$-algebra on $\mathbb{R}$ will include all closed intervals and any union of those intervals as well.  The general definition of topological space is to clarify that of Borel $\sigma$-algebras and to highlight the connections between the topology and measure theory.
+
+\begin{definition}
+A collection of sets $\mathcal{F}$ is called \textit{pairwise disjoint} if no two distinct sets in $\mathcal{F}$ share any elements.
+\end{definition}
+
+\begin{definition}
+Let $S$ be a set and $\mathcal{F}$ be a $\sigma$-algebra on $S$.  A function $\mu: \mathcal{F} \to [0,\infty] $ is called 
+\textit{countably additive} if, for every countable sequence of pairwise disjoint sets $\{A_n \}_{n=1}^{\infty} \in \mathcal{F}$, the following holds:
+
+\[
+    \mu \left( \bigcup_{n=1}^\infty A_n \right) = \sum_{n=1}^\infty \mu \left( A_n \right)
+\]
+
+\end{definition}
+
+\begin{definition}
+Let $S$ be a set and $\mathcal{F}$ be a $\sigma$-algebra on $S$.  The pair $(S, \mathcal{F})$ is then called a \textit{measurable space}.  If $\mu$ is a countably additive function on the measurable space  $(S, \mathcal{F})$ then $\mu$ is named a \textit{measure} on $(S, \mathcal{F})$ and the triple $(S,\mathcal{F},\mu)$ is called a \textit{measure space}.  If $\mu(S)=1$ then $\mu$ is a \textit{probability measure} and $(S,\mathcal{F},\mu)$ is a \textit{probability space} frequently denoted $(\Omega, \mathcal{F}, P)$ where $\Omega$ is the sample space or the set of all possible outcomes.
+\end{definition}
+
+\begin{definition}
+Let $(\Omega, \mathcal{F})$ be a measurable space and let $(\mathbb{R},\mathfrak{B}(\mathbb{R}))$ be the real number line equipped with a Borel $\sigma$-algebra over it.  Then a function $X: \Omega \to \mathbb{R}$ is called a \textit{$\mathcal{F}$-measurable function} (or a \textit{real random variable}) if for every Borel set $B \in \mathfrak{B}(\mathbb{R})$ the pre-image of $B$ is in $\mathcal{F}$.
+
+\end{definition}
+
+\begin{definition}
+Let $X:\Omega \to \mathbb{R}$ be a random variable on a probability space $(\Omega,\mathcal{F},P)$. The \textit{distribution} of $X$ is the probability measure $\mu_X$ on $(\mathbb{R},\mathfrak{B}(\mathbb{R}))$ defined by
+\[
+\mu_X(B)=P(X \in B)
+\]
+for every Borel set $B$.
+\end{definition}
+
+\begin{definition}
+Two real random variables $X$ and $Y$ on a probability space $(\Omega,\mathcal{F},P)$ are said to be \textit{independent} if for all Borel sets $A,B \subseteq \mathbb{R}$,
+\[
+P(X \in A, Y \in B) = P(X \in A)\,P(Y \in B).
+\]
+And more generally, random variables $X_1,\dots,X_n$ on a probability space $(\Omega,\mathcal{F},P)$ are \textit{independent} if for all Borel sets $B_1,\dots,B_n \subseteq \mathbb{R}$,
+\[
+P(X_1 \in B_1,\dots,X_n \in B_n)
+=
+\prod_{k=1}^n P(X_k \in B_k).
+\]
+\end{definition}
+
+
+That summarizes the mathematical framework that makes probability rigorous. At first, these definitions may seem abstract, but they serve a concrete purpose. They guarantee that statements such as
+
+$$P(X \leq c),\mathbb{E}[X],Var(X)$$
+
+are well-defined.  From this foundation we construct stochastic processes, and we will take as given the standard construction of Brownian motion as a well-defined stochastic process with the stated properties. Brownian motion then provides the basis for quadratic variation, stochastic integration, and Itô's lemma.  The role of measure theory in this exposition is not to develop every object from first principles, but to ensure that every object used is mathematically consistent a quality which will only become more necessary as we deal with more unintuitive ideas built upon our foundational understanding.
+
+\subsection{An Introduction to Filtration and Stochastic Processes}
+
+To begin discussing Stochastic processes we need to first consider information.  Information here is the collection of facts which can be determined up to a specific time.  To formalize this idea of information we introduce filtrations.
+
+\begin{definition}
+Let $(\Omega, \mathcal{F},P)$ be a probability space and $T \subseteq [0,\infty) $ be an index set, $\{\mathcal{F}_t\}_{t \in T}$ is called a $\mathit{filtration}$ on $(\Omega, \mathcal{F},P)$, if $\{\mathcal{F}_t\}_{t \in T}$ is an indexed collection of $\sigma$-algebras where for all $t \in T$ or $t \geq 0$ equivalently:
+\begin{enumerate}[label=(\roman*)]
+
+\item $\mathcal{F}_t \subseteq \mathcal{F} $
+
+\item If $0 \leq s \leq  t$, then $\mathcal{F}_s \subseteq \mathcal{F}_t$
+
+\end{enumerate}
+The quadruple $(\Omega,\mathcal{F}, \{\mathcal{F}_t\}_{t \in T} , P)$ is called a \textit{filtered probability space}.
+\end{definition}
+
+The index set $T$ of a filtration typically represents time and each $\mathcal{F}_t$ represents the information at time $t \in T$.  Note as well that $\{\mathcal{F}_t\}_{t \in T}$ or any other indexed collection of sets is typically called a family.
+
+\begin{definition}
+Let $(\Omega,\mathcal{F},P)$ be a probability space and $T \subseteq [0,\infty)$ be an index set. A \textit{stochastic process} is a family of random variables
+\[
+\{X_t\}_{t \in T},
+\]
+where each $X_t : \Omega \to \mathbb{R}$ is an $\mathcal{F}$-measurable function.
+
+Equivalently, a stochastic process is a function
+\[
+X : T \times \Omega \to \mathbb{R},
+\]
+where for each fixed $t \in T$, the map $\omega \mapsto X(t,\omega)$ is a random variable.
+\end{definition}
+
+\begin{lemma}
+Let $\{X_t\}_{t \in T}$ be a stochastic process, let $T \subseteq [0,\infty)$ be an index set and let $f:\mathbb{R} \to \mathbb{R}$ be Borel measurable. Then $\{f(X_t)\}_{t \in T}$ is also a stochastic process.
+\end{lemma}
+
+\begin{proof}
+If $f(X_t): \Omega \to \mathbb{R}$ is a Borel measurable function of a random variable then for all $B \in \mathfrak{B}(\mathbb{R})$, the pre-image under $f(X_t)$ must be in $\mathcal{F}$, the $\sigma$-algebra of $\Omega$ .  Thus $f(X_t)$ is a random variable as well for each $t \in T$, and thus $
+\{f(X_t)\}_{t \in T}$ is a family of random variables and defines a stochastic process.
+\end{proof}
+
+\begin{definition}
+Let $(\Omega, \mathcal{F},P)$ be a probability space and let $\{\mathcal{F}_t\}_{t \in T}$ be a filtration indexed by a set $T$.  A stochastic process $\{X_t\}_{t \in T}$ is adapted to $\{\mathcal{F}_t\}_{t \in T}$ if it is indexed by the same set $T$ and for every $t \in T$, $X_t$ is $\mathcal{F}_t$-measurable.
+\end{definition}
+
+\begin{lemma}
+Let $\{X_t\}_{t \in T}$ be adapted to a filtration
+$\{\mathcal{F}_t\}_{t \in T}$ with index set $T$ and let
+$f:\mathbb{R} \to \mathbb{R}$ be Borel measurable. Then $\{f(X_t)\}_{t \in T}$ is also adapted.
+\end{lemma}
+
+\begin{proof}
+For all $t \in T$ and for every Borel set $B \in \mathfrak{B}(\mathbb{R})$,  $(f(X_t))^{-1}(B) = X_t^{-1}(f^{-1}(B))$ by the definition of pre-image.  Since $f$ is Borel measurable $f^{-1}(B)$ is a Borel set, then since $X_t$ is $\mathcal{F}_t$-measurable $X_t^{-1}(f^{-1}(B))$ is in $\mathcal{F}_t$.  Thus for all $t \in T, (f(X_t))^{-1}(B) \in \mathcal{F}_t$ and by proxy $f(X_t)$ is $\mathcal{F}_t$-measurable.  Hence $\{f(X_t)\}_{t \in T}$ is also adapted to $\{\mathcal{F}_t\}_{t \in T}$.
+\end{proof}
+
+Now we not only have a notion of information through filtration but also the information needed to compute a family of indexed (for our purposes by time) random variables.  These ideas and definitions will be central in the following sections.
+
+\section{Brownian Motion}
+Brownian motion is named after botanist Robert Brown, who observed the jittery motion of pollen grains suspended in water.  Brown later showed that this motion was the same for any small enough particle suspended in water not just organic matter, but it was not until Einstein and Smoluchowski that the underlying phenomenon was understood.  They proposed that the motion was due to the particles colliding with water nearly $10^{21}$ times a second at normal temperatures.  This result not only revolutionized physics, acting as first definite proof of the existence of atoms, but also gave a language to describe various stochastic processes, from stock market fluctuations to cell signaling and molecular diffusion in biology, or even modern work on generative AI and search engines.
+
+\subsection{1D Random Walks}
+
+To begin to understand Brownian motion let's start with a simpler example, a "1D random walk".  Here we begin on a point $a$ on the integer number line and can move $1$ to the right adding $1$ to our initial value or move $1$ to the left subtracting $1$ from our initial value.  The formal definition is given below.
+
+\begin{definition}
+Let $\{X_t\}_{t \in T}$ be a stochastic process on a probability space $(\Omega, \mathcal{F}, P)$, and define a family of independent and identical random variables $\{ \xi_n  \}_{n \geq 1}$ on that same space such that 
+
+\[
+P(\xi_n = 1) = p, \quad P(\xi_n = -1) = 1-p
+\]
+
+Then $\{X_t\}_{t \in T}$ is called a $\mathit{1D}$ $\mathit{random}$ $\mathit{walk}$ if it is of the form
+
+\[
+X_n = X_0 + \sum_{k=1}^n\xi_k
+\]
+
+Where $X_0$ is some integer which represents the starting point of the walk.
+\end{definition}
+
+For simplicity, we can consider a \textit{simple symmetric walk}, where we take $X_0$ to equal zero and let the probability of walking left or right be equal: $1-p=p$.  
+The central limit theorem states that as the number of independent, identically distributed random variables with finite mean and variance grows, their normalized sum converges in distribution to a normal distribution.  The central limit theorem holds here for each $\xi_k$, and as $n$ increases, $X_n$ approaches a normal distribution with mean $0$ and variance $n$. A full treatment is outside the scope of this paper; the reader is directed to the cited reference \cite{CentralLimit}.  The definition of a normal distribution, mean, and variance are provided below.
+
+\begin{definition}
+A random variable $X$ is said to have a normal distribution with mean $\mu$ and variance $\sigma^2$, written
+\[
+X \sim N(\mu,\sigma^2),
+\]
+if its distribution is
+\[
+f(x)=
+\frac{1}{\sqrt{2\pi\sigma^2}}
+\exp\left(
+-\frac{(x-\mu)^2}{2\sigma^2}
+\right).
+\]
+\end{definition}
+
+To define mean and variance, we must first define Lebesgue integration.  
+\begin{remark}
+A complete treatment of Lebesgue integration is also outside the scope of this paper, however, the definition of Lebesgue integration is still provided below.
+\end{remark}
+
+\begin{definition}
+Let $(S, \mathcal{F}, \mu)$ be a measure space, then a \textit{simple function} is a function $\varphi: S \to \mathbb{R}$ of the form
+\[
+    \varphi = \sum_{k=1}^{n} a_k \mathbf{1}_{A_k},
+\]
+
+where $\mathbf{1}_{A_k}$ is an indicator function whose value is one for all $x \in A_k$. And where for all $k$ up to $n$, $a_k \in \mathbb{R}$ and $A_k \in \mathcal{F}$ are pairwise disjoint.  The \textit{Lebesgue Integral} of $\varphi$ with respect to $\mu$
+\[
+    \int_S \varphi \, d\mu = \sum_{k=1}^{n} a_k \, \mu(A_k).
+\]
+For a general non negative function $f: S \to [0,\infty]$ the Lebesgue Integral is
+\[
+ \int_S f \, d\mu = \sup \left\{ \int_S \varphi \, d\mu  :  0 \leq \varphi \leq f,\; \varphi \text{ simple} \right\}
+\]
+A measurable function $f: S \to \mathbb{R}$ is called \textit{integrable} if
+$\int_S |f| \, d\mu < \infty$, in which case
+\[
+    \int_S f \, d\mu = \int_S f^+ \, d\mu - \int_S f^- \, d\mu,
+\]
+where $f^+ = \max(f,0)$ and $f^- = \max(-f,0)$.
+\end{definition}
+
+A simple function $\varphi$ can be thought of as a generalized floor function $\lfloor \cdot \rfloor$.  For some integer $n$ at each interval $(n,n+1)$  $\lfloor \cdot \rfloor$ has the value $n$.  However, $\varphi$ assigns not just $n$ but any real number to not just an interval of $\mathbb{R}$ but to any $\mathcal{F}$-measurable set $A_k$.  Then since $A_k$ is measurable we can think of the measure just as in the probability case as being a generalization of the size of a set.  Since we will be working over $\mathbb{R}$, we can view $\mu(A_k)$ as the "length" of the set $A_k$ and $a_k \, \mu(A_k)$ as the length times height or area under that region of the simple function.  We then define the integral of a simple function to be the finite sum of these areas, giving us the total "area" under the simple function.  Then for any non negative function $g: S \to [0,\infty]$, we find the least upper bound or supremum of the set of all simple functions which at no point are greater than $g$.  For our purposes, one may think of the Lebesgue integral as slowly squeezing simple functions closer and closer to the function $g$ to approximate its "area" under the curve.  The function $g$ was defined to be non negative since the least upper bound would lose meaning for negative values, so we decompose $g$ into positive and negative parts and then subtract.  The only two important differences for our purposes between Riemann and Lebesgue integrals are that the Lebesgue integral partitions the image of a function not its domain and that it uses our previously defined ideas of measure to formalize the notion of "area" under the curve.  Although it may not be obvious, this will be necessary as statements such as
+
+\[
+\lim_{n \to \infty} \int_S f_n = \int_S \lim_{n \to \infty} f_n
+\]
+
+would not be able to be evaluated directly when using Riemann Integrals.  Here $f_n$ is a sequence of functions that converges to some $f$.
+
+\begin{definition}
+Let $X$ be an integrable random variable on a probability space $(\Omega, \mathcal{F}, P)$, then the $\textit{expectation}$ or $\textit{mean}$ of $X$ is:
+
+\[
+\mathbb{E}[X] = \int_{\Omega} X dP
+\]
+
+\end{definition}
+
+\begin{definition}
+Let $X$ be an integrable random variable on a probability space $(\Omega, \mathcal{F}, P)$, then the $\textit{variance}$ is:
+
+\[
+\text{Var}(X) = \mathbb{E}[(X-\mathbb{E}[X])^2]
+\]
+
+By the linearity of the integral, this reduces to
+
+\[
+\text{Var}(X) = \mathbb{E}[X^2]-\mathbb{E}[X]^2
+\]
+
+\end{definition}
+
+\begin{proposition}
+For an integrable random variable $X$ and a real number $c$
+\[
+\text{Var}(cX) = c^2\text{Var}(X)
+\]
+\end{proposition}
+
+\begin{proposition}
+Given $X_1,X_2,...,X_n$ are independent random variables,
+\[
+\text{Var} \left( \sum_{k=1}^n X_k \right) = \sum_{k=1}^n \text{Var} (X_k)
+\]
+\end{proposition}
+
+
+
+\subsection{Limit of a Walk}
+
+1D Brownian motion arises as a scaling limit of a simple symmetric random walk. Let $\{\xi_k\}_{k\geq 1}$ be independent identically distributed random variables such that:
+\[
+\mathbb{P}(\xi_k = 1) = \mathbb{P}(\xi_k = -1) = \frac{1}{2},
+\quad \mathbb{E}[\xi_k]=0,\quad \mathrm{Var}(\xi_k)=1.
+\]
+
+A random walk with $N$ steps and spatial scaling factor $\Delta x$ is given by:
+\[
+W_t^{(N)} = \Delta x \sum_{k=1}^N \xi_k.
+\]
+
+Since the $\xi_k$ are independent by Proposition 2.1 and 2.2,
+\[
+\mathrm{Var}\!\left(W_t^{(N)}\right)
+= \Delta x^2 \sum_{k=1}^N \mathrm{Var}(\xi_k)
+= N \Delta x^2.
+\]
+To obtain a continuous-time limit, we reintroduce the time step $\Delta t$ and define
+\[
+t = N \Delta t
+\]
+
+We define $\mathrm{Var}\!\left(W_t^{(N)}\right)$ to have a non-zero and finite value as $\Delta t$ approaches zero, so the sequence converges to a meaningful limit.  To ensure a non-degenerate limit 
+\[
+\Delta x \propto \sqrt{\Delta t}
+\]
+
+Thus,
+
+\[
+\Delta x = c \, \sqrt{\Delta t} \, , \quad \mathrm{Var}\!\left(W_t^{(N)}\right) = c^2t
+\]
+
+for some positive real number $c$.  For standard Brownian motion $c$ is defined to be $1$ to simplify the math.  Hence,
+
+\[
+\Delta x = \, \sqrt{\Delta t} \, , \quad \mathrm{Var}\!\left(W_t^{(N)}\right) = t
+\]
+
+Note that if $W_t$ is standard Brownian motion with $\mathrm{Var}(W_t)=t$, then scaling by a positive real number $\sigma$ produces a stochastic process
+\[
+X_t = \sigma W_t,
+\]
+which satisfies
+\[
+\mathrm{Var}(X_t)=\sigma^2 t.
+\]
+
+More generally, Brownian motion with drift $\mu$ and volatility $\sigma$ has the form
+\[
+X_t = \mu t + \sigma W_t,
+\]
+where $\mu$ controls the deterministic linear trend (drift) of the process, and $\sigma$ controls the magnitude of random fluctuations (variance rate).
+
+\subsection{Wiener Processes}
+
+A Wiener process is the continuous-in-time formalization of the  rescaled walk above.  To describe Wiener processes, we first will introduce the definitions of almost surely and independence of $\sigma$-algebras.
+
+\begin{definition}
+    An event $A \in \mathcal{F}$ of some probability space $(\Omega, \mathcal{F}, P)$ happens \textit{surely} if $A = \Omega$ and will happen $\textit{almost surely}$ if
+    \[
+    P(A)=1
+    \]
+\end{definition}
+
+Note that every event which happens surely will happen almost surely as well, but every event that happens almost surely does not have to happen surely.  To understand this term intuitively a point can have a measure of zero and therefore a probability of zero of occurring; however, it is still possible for that point in the sample space to occur.
+
+\begin{definition}
+Let $(\Omega, \mathcal{F}, P)$ be a probability space, two sub-$\sigma$-algebras $\mathcal{A} \subseteq \mathcal{F}$ and $\mathcal{B}\subseteq \mathcal{F}$ are called $\textit{independent}$, if for all $A \in \mathcal{A}$ and $B \in \mathcal{B}$
+\[
+P(A \cap B) = P(A)P(B)
+\]
+A random variable, $X$ and sub-$\sigma$-algebra $\mathcal{A}$ are called $\textit{independent}$ if the $\sigma$-algebra generated by $X$ is independent of $\mathcal{A}$.  That is, for all Borel sets $B$ and $A \in \mathcal{A}$
+\[
+P(\{X \in B\} \cap A) = P(\{X \in B \})P(A)
+\]
+\end{definition}
+
+Our previous Definition 1.11 of independence of random variables is just the special case where each $\sigma$-algebra are the $\sigma$-algebras generated by each random variable.
+
+\begin{definition}
+A stochastic process $\{W_t\}_{t \in T}$ defined on a probability space $(\Omega, \mathcal{F}, P)$ with an index set $T$ is a \textit{Wiener process} (or \textit{standard Brownian motion}) with respect to a filtration $\{\mathcal{F}_t\}_{t \in T}$ if it satisfies:
+\begin{enumerate}[label=(\roman*)]
+\item $W_0 = 0$ almost surely.
+\item $\{W_t\}_{t \in T}$ is adapted to the filtration $\{\mathcal{F}_t\}_{t \in T}$
+\item For all $0 \leq s < t$, the increment $W_t - W_s$ is independent of the $\sigma$-algebra $\mathcal{F}_s$
+\item For all $0 \leq s < t$, the increment $W_t - W_s$ is normally distributed with mean $0$ and variance $t-s$:
+\[
+W_t - W_s \sim N(0, t-s)
+\]
+\item The sample paths $t \mapsto W_t(\omega)$ are almost surely continuous.
+\end{enumerate}
+\end{definition}
+
+Conditions (i) and (ii) ensure that the walk begins at zero and that the process respects some filtration, so that the value of the process at some time $t$ is within the information stored by the $\sigma$-algebra at that same time $t$.  
+
+To understand the motivation behind condition (iii) conditional probability will need to be lightly introduced.  The conditional probability of B given A is of the form:
+\[
+P(B \mid A) = \frac{P(B \cap A)}{P(A)}
+\]
+This can just be thought of as the probability of $B$ given $A$ normalized by the probability of $A$.  By the definition of independence we see that for two independent events the above simplifies to:
+\[
+P(B \mid A) = P(B)
+\]
+Thus, if the increment $W_t - W_s$ is independent of the $\sigma$-algebra $\mathcal{F}_s$, the probability of $W_t - W_s$ being in some Borel set $B$ is independent of $\mathcal{F}_s$.  Intuitively, every increment has a complete "lack of memory" of what occurred before it.  
+
+Condition (iv) can be thought of through the central limit theorem discussed in Section 2.1 where when summing a series of infinitesimal random variables the resulting distribution should be normal.  Specifically, a simple symmetric walk should be normally distributed with variance equal to the total number of steps.  Here, since the total number of random variables approaches infinity, a measure is used.  More specifically, the length of the interval is taken instead of the total number of random variables.  
+
+Condition (v) ensures that, with probability $1$, no jagged discontinuous jumps can be made.
+
+
+
+
+\section{Quadratic Variation}
+
+For any continuously differentiable function, the quadratic variation is zero.  However, Wiener processes are nowhere differentiable, so this result no longer applies.  As we will see in later sections, this difference is core to understanding and evaluating stochastic integrals.
+
+\begin{definition}
+Let $[0,T]$ be a real valued interval, the \textit{partition} $\Pi$ of $[0,T]$ is the finite ordered sequence
+\[
+0 = t_0< t_1 < \cdots < t_n = T
+\]
+The \textit{mesh size} of a partition, denoted $\|\Pi\|$, is defined as the length of the largest sub interval:
+\[
+\|\Pi\| = \max_{0 \leq k \leq n-1} (t_{k+1} - t_k)
+\]
+This defines a norm of the partition and is often shorthanded to just the norm of a partition.
+\end{definition}
+
+\begin{definition}
+A sequence of random variables $X_1,X_2,...$ \textit{converges in probability} to some random variable $Y$ if
+\[
+\lim_{n\to\infty}P(|X_n-Y|\geq \epsilon) = 0 \quad \forall\epsilon>0
+\]
+\end{definition}
+
+\begin{definition}
+A sequence of random variables $X_1,X_2,...$ \textit{converges almost surely} to some random variable $Y$ if
+\[
+P\left(\omega \in \Omega : \lim_{n \to \infty} X_n(\omega) = Y(\omega)\right) = 1
+\]
+\end{definition}
+
+\begin{definition}
+Let $\{X_t \}_{t \geq 0}$ be a stochastic process defined on a probability space $(\Omega, \mathcal{F}, P)$.  The \textit{quadratic variation}, denoted $\langle X\rangle_T$ of $X$ over the partition $\{ \Pi_n\}$ of $[0,T]$, is the limit in probability of the sum of squared increments as the mesh size approaches zero:
+\[
+\langle X\rangle_T=\lim_{\|\Pi_n\| \to 0} \sum_{k=0}^{n-1} (X_{t_{k+1}} - X_{t_k})^2
+\]
+\end{definition}
+
+Before evaluating the quadratic variation of Brownian motion and verifying its uniqueness and existence, two lemmas from general probability theory will be necessary to move forward.
+
+\begin{lemma}[Chebyshev's Inequality]
+Let $X$ be a square integrable random variable (that is, $X^2$ is integrable).  Let $\mu = \mathbb{E}[X]$, then
+
+\[
+P(|X-\mu|\geq c)\leq \frac{\mathrm{Var}(X)}{c^2}
+\]
+\end{lemma}
+
+\begin{proof}
+By the definition of variance,
+\[
+\mathrm{Var}(X) = \int_{|X-\mu|\geq c} (X-\mu)^2 dP + \int_{|X-\mu| < c} (X-\mu)^2 dP 
+\]
+  Since $\int_{|X-\mu| < c} (X-\mu)^2dP$ must be greater than or equal to zero,
+
+\[
+\mathrm{Var}(X) \geq \int_{|X-\mu|\geq c} (X-\mu)^2dP 
+\]
+In the region $|X-\mu|\geq c$, $(X-\mu)^2 \geq c^2$ and since $(X-\mu)^2$ is everywhere positive 
+
+\[
+\int_{|X-\mu|\geq c} (X-\mu)^2dP \geq \int_{|X-\mu|\geq c} c^2dP
+\]
+Thus,
+\begin{align*}
+   \mathrm{Var}(X) &\geq \int_{|X-\mu|\geq c} c^2dP \\
+   \mathrm{Var}(X) &\geq c^2\int_{|X-\mu|\geq c} dP \\
+    \mathrm{Var}(X) &\geq c^2 P(|X-\mu| \geq c) \\
+\end{align*}
+Therefore,
+\[
+    P(|X-\mu| \geq c) \leq \frac{\mathrm{Var}(X)}{c^2}
+\]
+
+\end{proof}
+
+\begin{lemma}[First Borel-Cantelli Lemma]
+Let $A_1,A_2,...$ be an infinite sequence of events if
+\[
+\sum_{k=1}^\infty P(A_k) < \infty 
+\]
+then,
+\[
+P \left( \bigcap_{N=1}^\infty \bigcup_{n=N}^\infty A_n \right) = 0
+\]
+\end{lemma}
+
+Intuitively, the First Borel-Cantelli Lemma states that if the sum of probabilities of an infinite series of events is finite, then the events will eventually almost surely stop happening.  Here, \[\bigcap_{N=1}^\infty \bigcup_{n=N}^\infty A_n\]
+is just expressing that no matter how far out $N$ is set, the infinite sequence will always have probability $0$.  A proof of this lemma is too lengthy to write here; however, for a proof of this and the second Borel-Cantelli lemma see \cite{BorelCantelli}.
+
+\begin{theorem}
+Let $\{W_t\}_{t \geq 0}$ be a standard Wiener process, and let $\{\Pi_n\}$ be a sequence of partitions over the interval $[0,T]$. Define the quadratic variation sum $V_{\Pi_n} = \sum_{k=0}^{n-1} (W_{t_{k+1}} - W_{t_k})^2$. Then as $\|\Pi_n\| \to 0$:
+\[
+V_{\Pi_n} \to T
+\]
+in probability. Furthermore, if the partition sequence satisfies the following condition:
+\[
+\sum_{n=1}^\infty \|\Pi_n\| < \infty
+\]
+then $V_{\Pi_n} \to T$ almost surely, establishing that $\langle W \rangle_T = T$ almost surely.
+\end{theorem}
+
+\begin{proof}
+Let $\Pi_n = \{t_0,t_1,...,t_n\}$ be a partition on $[0,T]$.  Define $\Delta W_k = W_{t_{k+1}} - W_{t_k}$ and the time step $\Delta t_k = t_{k+1} - t_k$ as shorthand.  Thus,
+\[
+V_{\Pi_n} = \sum_{k=0}^{n-1} (\Delta W_k)^2
+\]
+By property (iv) of Definition 2.8, each $\Delta W_k$ follows a normal distribution $\Delta W_k \sim N(0, \Delta t_k)$.  Then, by Definition 2.5 $\mathbb{E}[(\Delta W_k)^2] = \mathrm{Var}(\Delta W_k) + \mathbb{E}[(\Delta W_k)]^2 = \Delta t_k$.  By the linearity of expectation, the expected value of our sum is:
+\[
+\mathbb{E}[V_{\Pi_n}] = \sum_{k=0}^{n-1} \mathbb{E}[(\Delta W_k)^2] = \sum_{k=0}^{n-1} \Delta t_k = T
+\]
+By property (iii) of Definition 2.8, each $\Delta W_k$ is independent. Thus, by Proposition 2.2
+\[
+\mathrm{Var}(V_{\Pi_n}) = \sum_{k=0}^{n-1} \mathrm{Var}\left((\Delta W_k)^2\right) = \sum_{k=0}^{n-1} \left( \mathbb{E}[(\Delta W_k)^4] - \left(\mathbb{E}[(\Delta W_k)^2]\right)^2 \right)
+\]
+Then, by the definition of expectation,
+\[
+\mathbb{E}[(\Delta W_k)^4] = \int_{-\infty}^\infty x^4\frac{1}{\sqrt{2\pi \Delta t _k}} \exp \left( \frac{-x^2}{2\Delta t _k} \right)
+\]
+This integral evaluates to $3 (\Delta t_k)^2$ and can be evaluated simply through integration by parts.  As shown above $\mathbb{E}[(\Delta W_k)^2] = \Delta t_k$.  Thus, 
+\[
+\mathrm{Var}(V_{\Pi_n}) = \sum_{k=0}^{n-1} \left( 3 (\Delta t_k)^2 - (\Delta t_k)^2 \right) = 2 \sum_{k=0}^{n-1} (\Delta t_k)^2
+\]
+We can bound this summation by factoring out the maximum time interval (the mesh size $\|\Pi_n\|$):
+\[
+\mathrm{Var}(V_{\Pi_n}) \leq 2 \left( \max_{0 \leq k \leq n-1} \Delta t_k \right) \sum_{k=0}^{n-1} \Delta t_k = 2 \|\Pi_n\| T
+\]
+By applying Chebyshev's Inequality (Lemma 3.5), we see that for any fixed $\epsilon > 0$:
+\[
+P(|V_{\Pi_n} - T| \geq \epsilon) \leq \frac{\mathrm{Var}(V_{\Pi_n})}{\epsilon^2} \leq \frac{2 \|\Pi_n\| T}{\epsilon^2}
+\]
+Then taking the limit,
+\[
+\lim_{\| \Pi_n \| \to 0} \left( \mathrm{Var}(V_{\Pi_n}) \right) = 0
+\]
+\[
+\lim_{\| \Pi_n \| \to 0} \left( P(|V_{\Pi_n} - T| \right) \geq \epsilon) \leq  \lim_{\| \Pi_n \| \to 0} \left( \frac{2 \|\Pi_n\| T}{\epsilon^2} \right) = 0
+\]
+Since the image of $P$ is $[0,1]$,
+\[
+\lim_{\| \Pi_n \| \to 0} \left( P(|V_{\Pi_n} - T| \right) \geq \epsilon) = 0
+\]
+Therefore, as $\|\Pi_n\| \to 0$, this probability upper bound shrinks to $0$, establishing that $V_{\Pi_n} \to T$ in probability.
+
+To strengthen this convergence result, we apply the First Borel-Cantelli Lemma (Lemma 3.6).  Consider a sequence of partitions where the sum of their mesh sizes converges: $\sum_{n=1}^\infty \|\Pi_n\| < \infty$. Defining our sequence of events as $A_n = \{ |V_{\Pi_n} - T| \geq \epsilon \}$, we sum their probabilities:
+\[
+\sum_{n=1}^\infty P(A_n) \leq \sum_{n=1}^\infty \frac{2 \|\Pi_n\| T}{\epsilon^2} = \frac{2T}{\epsilon^2} \sum_{n=1}^\infty \|\Pi_n\| < \infty
+\]
+Because the infinite series converges, the First Borel-Cantelli Lemma guarantees that the probability of these exceptions occurring infinitely many times is $0$. Thus, in the limit as $n \to \infty$, the variation sum converges with probability one to the deterministic value $T$:
+\[
+P\left(\lim_{n \to \infty} \sum_{k=0}^{n-1} (W_{t_{k+1}} - W_{t_k})^2 = T\right) = 1
+\]
+
+Therefore, if the partition furthermore satisfies: $\sum_{n=1}^\infty \|\Pi_n\| < \infty$, $V_{\Pi_n} \to T$ almost surely.
+\end{proof}
+
+For general Brownian motion with drift $\mu$ and volatility $\sigma$, as $\|\Pi_n\| \to 0$, $\langle W \rangle _T = \sigma^2T$.  This can be proved in a similar manner as above but is outside the scope of this paper.
+
+
+
+\section{Stochastic Integration}
+
+\subsection{It\^o Integral}
+A traditional differential equation has the following form:
+\[
+dy = b(t,y)dt
+\]
+A stochastic differential equation generalizes this with an additional "noise term":
+\[
+dX_t = \mu(t,X_t)dt + \sigma(t,X_t)dW_t
+\]
+Integrating both sides yields:
+\[
+X_t = X_0 + \int_0^t \mu(s,X_s)ds + \int_0^t \sigma(s,X_s)dW_s
+\]
+The classical Lebesgue-Stieltjes integral assumes an integrator with finite total variation. Let $\Pi_n$ be a sequence of partitions over $[0,T]$ such that $\|\Pi_n\| \to 0$ as $n \to \infty$. Defining $\Delta W_k = W_{t_{k+1}} - W_{t_k}$, the total variation over a path is:
+\[
+U_{\Pi_n} = \sum_{k=0}^{n-1} |\Delta W_k|
+\]
+The quadratic variation sum can be bounded by:
+\[
+V_{\Pi_n} = \sum_{k=0}^{n-1} (\Delta W_k)^2 \leq \left( \max_{0 \leq k \leq n-1} \left| \Delta W_k \right| \right) U_{\Pi_n}
+\]
+By property (v) of Definition 2.8, standard Brownian motion paths are almost surely continuous. Since the interval $[0,T]$ is compact, these sample paths are almost surely uniformly continuous. Consequently, along any sequence of partitions where the mesh size vanishes ($\|\Pi_n\| \to 0$), we have $\max_k \left| \Delta W_k \right| \to 0$. Because Theorem 3.7 establishes that $\lim_{n \to \infty} V_{\Pi_n} = T > 0$ in probability, the path total variation $U_{\Pi_n}$ must approach infinity almost surely. Therefore, the classical Lebesgue-Stieltjes integral against $dW_t$ fails to exist pathwise, necessitating the construction of a specialized stochastic integral.
+
+\begin{definition}
+Let $(\Omega, \mathcal{F}, \{\mathcal{F}_t\}_{t \geq 0}, P) $ be a filtered probability space. A stochastic process $H = \{H_t\}_{t \geq 0}$ is a \textit{simple predictable process} or \textit{simple process} if there exists a finite sequence of deterministic times $0 = t_0 < t_1 < \cdots < t_n = T$ such that:
+\[
+H_t(\omega) = X_0(\omega) \mathbf{1}_{\{0\}}(t) + \sum_{i=0}^{n-1} X_i(\omega) \mathbf{1}_{(t_i,t_{i+1}]}(t)
+\]
+where $X_0$ is an $\mathcal{F}_0$-measurable random variable, and each $X_i$ is a bounded, $\mathcal{F}_{t_i}$-measurable random variable.
+\end{definition}
+
+This is a sort of dynamic analogue to a simple function.  Each height is now analogous to a random variable, and instead of partitioning $\Omega$, we partition $[0,T]$ or "time". 
+
+
+\begin{definition}
+Let $H_t$ be a simple process as defined above. For any $t \in (t_{i-1}, t_i]$, the \textit{stochastic integral} or \textit{It\^o integral} of $H$ with respect to a standard Wiener process $W$ is defined as:
+\[
+Z_t = \int_0^t H_s \, dW_s = \sum_{k=0}^{i-2} X_k [W_{t_{k+1}} - W_{t_k}] + X_{i-1} [W_{t} - W_{t_{i-1}}]
+\]
+\end{definition}
+
+Here, the summation notation calculates the "dynamic" equivalent of the Lebesgue integral, and the extra term calculates the integral over the partial interval.  This difference in form from the Lebesgue integral is due to the intervals being of the form $(t_{i-1}, t_i]$, and Wiener process increments being used as equivalent to the Lebesgue measure of an interval.  Note that upper limit intervals $(\omega_{i-1}, \omega_i]$ can be taken over $\Omega$ to define the Lebesgue integral of simple functions which have the same structure.  However, there is a deep difference between the intervals of Wiener increments as the quadratic variation is not finite.  More on these differences will be discussed below on Stratonovich integrals.  This definition hints at the structure of the It\^o integral, as there is no immediate conceptual equivalent to "area" in a traditional sense.  Instead, the integral can be viewed through the lens of simple predictable processes in much the same way as a Lebesgue integral.  
+
+We want to define the It\^o integral over not just simple predictable processes, however.  In particular, we would like to generalize it to $\mathcal{H}^2[0,T]$ as defined below.
+
+\begin{definition}
+Let $(\Omega, \mathcal{F}, \{\mathcal{F}_t\}_{t \geq 0}, P)$ be a filtered probability space. We define $\mathcal{H}^2[0,T]$ as the space of all real-valued, adapted, and left-continuous stochastic processes $X: [0,T] \times \Omega \to \mathbb{R}$ such that the following norm is finite:
+\[
+\|X\|_{\mathcal{H}^2} = \left( \mathbb{E}\left[ \int_0^T X_t^2 \, dt \right] \right)^{1/2} < \infty
+\]
+\end{definition}
+
+\begin{remark}
+For the remainder of this paper, we shall restrict our focus to the dense subspace of $\mathcal{H}^2[0,T]$ consisting of processes that are bounded and sample-continuous. That is, for every $\omega \in \Omega$, the trajectory $t \mapsto X_t(\omega)$ is a continuous function on $[0,T]$, and there exists a real number $M$ such that $|X_t(\omega)| \leq M$ for all $t$ and $\omega$.  Unless otherwise specified, when referring to $\mathcal{H}^2[0,T]$ we are specifically referring to the subspace of bounded and continuous processes in $\mathcal{H}^2[0,T]$.
+\end{remark}
+
+Left continuity is required because simple predictable processes are defined on left-open, right-closed time intervals.  To generalize the It\^o integral, we would like to in much the same way as for the Lebesgue integral "fit" simple predictable processes to those in $\mathcal{H}^2[0,T]$.  This motivates the following definition.
+
+\begin{definition}
+Let $V$ and $W$ be two normed vector spaces and $\mathcal{L}: V \to W$ a map between them.  $L$ is an \textit{isometry} if it preserves the length of every vector after transforming:
+\[
+\|v \|_V = \| \mathcal{L}(v)\|_W \quad \forall v \in V
+\]
+\end{definition}
+
+Here, we define conditional expectation; as in the case of the Chebyshev inequality and the First Borel-Cantelli Lemma, the following properties will be needed to derive an isometry between the simple predictable processes and square integrable random variables $L^2(\Omega)$.
+
+\begin{definition}
+Let $(\Omega, \mathcal{F}, P)$ be a probability space, $\mathcal{G} \subseteq \mathcal{F}$ be a sub-$\sigma$-algebra, and $X$ be an integrable random variable. The \textit{conditional expectation} of $X$ given $\mathcal{G}$, denoted $E[X \mid \mathcal{G}]$, is defined as the unique almost sure random variable $Y$ satisfying:
+\begin{enumerate}[label=(\roman*)]
+\item $Y$ is $\mathcal{G}$-measurable.
+\item For every event $G \in \mathcal{G}$:
+\[
+\int_G Y dP = \int_G X dP 
+\]
+\end{enumerate}
+\end{definition}
+
+\begin{proposition}
+Let $X$ and $Y$ be integrable random variables, $a, b \in \mathbb{R}$, and $\mathcal{F}$ be a $\sigma$-algebra. The conditional expectation satisfies the following properties:
+\begin{enumerate}[label=(\roman*)]
+\item If $X$ is $\mathcal{F}$-measurable, then $E[X \mid \mathcal{F}] = X$ almost surely.
+\item If $X$ is independent of $\mathcal{F}$, then $E[X \mid \mathcal{F}] = \mathbb{E}[X]$ almost surely.
+\item Linearity: $E[aX + bY \mid \mathcal{F}] = aE[X \mid \mathcal{F}] + bE[Y \mid \mathcal{F}]$ almost surely.
+\item Tower Property: If $\mathcal{G} \subseteq \mathcal{F}$ is a sub-$\sigma$-algebra, then $E[E[X \mid \mathcal{F}] \mid \mathcal{G}] = E[X \mid \mathcal{G}]$ almost surely.
+\end{enumerate}
+\end{proposition}
+
+\begin{theorem}[It\^o Isometry for Simple Processes]
+Let $H_t$ be a simple process adapted to the filtered probability space $(\Omega, \mathcal{F}, \{\mathcal{F}_t\}_{t \geq 0}, P)$. Then:
+\[
+\mathbb{E} \left[ \left(\int_0^T H_t \, dW_t \right)^2 \right] = \mathbb{E} \left[ \int_0^T H_t^2 dt \right]
+\]
+\end{theorem}
+
+\begin{proof}
+Using Definition 4.2 the stochastic integral and evaluating for $t_n = T$ we get the following simplified sum.
+\[
+\sum_{k=0}^{n-1} X_k (W_{t_{k+1}} - W_{t_k})
+\]
+We then use the above expression to expand the square of the integral.
+\[
+\left(\int_0^T H_t \, dW_t \right)^2 = \left(\sum_{k=0}^{n-1} X_k (W_{t_{k+1}} - W_{t_k}) \right)^2
+\]
+And, we further expand the polynomial into both squared and cross terms.
+\[
+\left(\sum_{k=0}^{n-1} X_k (W_{t_{k+1}} - W_{t_k}) \right)^2 = \sum_{k=0}^{n-1} X_k^2 (W_{t_{k+1}} - W_{t_k})^2 + 2 \sum_{j<k} X_k X_j (W_{t_{k+1}} - W_{t_k})(W_{t_{j+1}} - W_{t_j})
+\]
+We then take the expectation of both sides and apply its linearity.
+\[
+\mathbb{E} \left[ \left(\int_0^T H_t \, dW_t \right)^2 \right] = \sum_{k=0}^{n-1} \mathbb{E} \left[ X_k^2 (W_{t_{k+1}} - W_{t_k})^2 \right] + 2 \sum_{j<k} \mathbb{E} \left[ X_k X_j (W_{t_{k+1}} - W_{t_k})(W_{t_{j+1}} - W_{t_j}) \right]
+\]
+For any pair $j < k$, the random variables $X_k$, $X_j$, and $(W_{t_{j+1}} - W_{t_j})$ are entirely determined by the history up to time $t_k$, meaning they are $\mathcal{F}_{t_k}$-measurable. Thus, we can condition on $\mathcal{F}_{t_k}$ and apply the Tower Property (property (iv) of Proposition 4.1), factoring out $\mathcal{F}_{t_k}$-measurable terms.
+\[
+\mathbb{E} \left[ X_k X_j (W_{t_{k+1}} - W_{t_k})(W_{t_{j+1}} - W_{t_j}) \right] = \mathbb{E} \left[ X_k X_j (W_{t_{j+1}} - W_{t_j}) \cdot E[W_{t_{k+1}} - W_{t_k} \mid \mathcal{F}_{t_k}] \right]
+\]
+By property (iii) of Definition 2.8, the future increment $W_{t_{k+1}} - W_{t_k}$ is independent of $\mathcal{F}_{t_k}$. Thus, by Proposition 4.1 (ii), its conditional expectation reduces, simplifying the above expression.
+\[
+E[W_{t_{k+1}} - W_{t_k} \mid \mathcal{F}_{t_k}] = \mathbb{E}[W_{t_{k+1}} - W_{t_k}] = 0
+\]
+This causes all cross terms to vanish identically, leaving us with only the sum of squared terms:
+\[
+\mathbb{E} \left[ \left(\int_0^T H_t \, dW_t \right)^2 \right] = \sum_{k=0}^{n-1} \mathbb{E} \left[ X_k^2 (W_{t_{k+1}} - W_{t_k})^2 \right]
+\]
+Since $X_k^2$ is $\mathcal{F}_{t_k}$-measurable and $(W_{t_{k+1}} - W_{t_k})^2$ is independent of $\mathcal{F}_{t_k}$, we apply the Tower Property, then simplify by treating $X_k^2$ as constant, and then using property (ii) of Proposition 4.1.
+\[
+\mathbb{E} \left[ X_k^2 (W_{t_{k+1}} - W_{t_k})^2 \right] = \mathbb{E} \left[ X_k^2 \cdot E[(W_{t_{k+1}} - W_{t_k})^2 \mid \mathcal{F}_{t_k}] \right] = \mathbb{E} \left[ X_k^2 \cdot \mathbb{E}[(W_{t_{k+1}} - W_{t_k})^2] \right]
+\]
+By property (iv) of Definition 2.8, $W_{t_{k+1}} - W_{t_k} \sim N(0, \Delta t_k)$, thus $\mathbb{E}[(W_{t_{k+1}} - W_{t_k})^2] = \Delta t_k$. Substituting this second moment value into expectation yields the following.
+\[
+\sum_{k=0}^{n-1} \mathbb{E} \left[ X_k^2 \right] \Delta t_k = \mathbb{E} \left[ \sum_{k=0}^{n-1} X_k^2 \Delta t_k \right]
+\]
+Recognizing the sum within the expectation as the Lebesgue integral of the simple step process $H_t^2$ over the partition time intervals gives:
+\[
+\mathbb{E} \left[ \sum_{k=0}^{n-1} X_k^2 \Delta t_k \right] = \mathbb{E} \left[ \int_0^T H_t^2 \, dt \right]
+\]
+Therefore,
+\[
+\mathbb{E} \left[ \left(\int_0^T H_t \, dW_t \right)^2 \right] = \mathbb{E} \left[ \int_0^T H_t^2 \, dt \right]
+\]
+\end{proof}
+
+\begin{proposition}
+The set of simple predictable processes is dense within our restricted subspace of $\mathcal{H}^2[0,T]$. That is, for any bounded, sample-continuous process $X \in \mathcal{H}^2[0,T]$, there exists an approximating sequence of simple predictable step processes $\{H^{(n)}\}_{n=1}^\infty$ such that:
+\[
+\lim_{n \to \infty} \|X - H^{(n)}\|_{\mathcal{H}^2}^2 = \lim_{n \to \infty} \mathbb{E}\left[ \int_0^T \left| X_t - H^{(n)}_t \right|^2 \, dt \right] = 0
+\]
+\end{proposition}
+
+A proof of the density of simple processes over $\mathcal{H}^2[0,T]$ would be too involved for this paper requiring mollification.  However, due to Remark 2 by focusing on the bounded and continuous processes in $\mathcal{H}^2[0,T]$, the proof reduces to the sample paths being uniformly continuous and therefore left endpoint Riemann partitions being uniform.  Then we apply the bounded convergence theorem.  See Chapter 7 of Understanding Analysis \cite{Abbott} for more information on the bounded convergence theorem. 
+
+\begin{definition}
+A sequence is \textit{Cauchy} if the difference between terms in the far limit of the tail of the sequence approaches zero:
+\[
+\|H^{(n)} - H^{(m)}\|_{\mathcal{H}^2} \to 0 \quad \text{as } n,m \to \infty
+\]
+\end{definition}
+
+Since the sequence of simple processes $\{H^{(n)}\}$ will converge to the target process $X$ under the $\mathcal{H}^2$ norm by the Density of Simple Processes (Proposition 4.2), the following must hold:
+\[
+\lim_{n\to\infty}\|H^{(n)}-X\|_{\mathcal{H}^2} = 0
+\]
+Or for every $\epsilon>0$  there exists an $N$ such that for all $n,m>N$:
+\[
+\|H^{(n)}-X\|_{\mathcal{H}^2} < \frac{\epsilon}{2} \quad \|H^{(m)}-X\|_{\mathcal{H}^2} < \frac{\epsilon}{2}
+\]
+We apply the triangle inequality to the difference of two sequences:
+\[
+\|H^{(n)} - H^{(m)}\|_{\mathcal{H}^2} \leq \|H^{(n)} - X\|_{\mathcal{H}^2} + \|X-H^{(m)} \|_{\mathcal{H}^2}
+\]
+Thus,
+\[
+\|H^{(n)} - H^{(m)}\|_{\mathcal{H}^2} < \epsilon
+\]
+Therefore, the sequence of simple processes is Cauchy.
+
+We now use the linearity of the integral and apply It\^o Isometry for Simple Processes to map from $\mathcal{H}^2[0,T]$ to the space of square integrable random variables $L^2(\Omega)$ while preserving distance.
+\[
+ \|H^{(n)} - H^{(m)}\|_{\mathcal{H}^2}^2 =\mathbb{E}\left[ \int_0^T \left| H^{(n)}_t - H^{(m)}_t \right|^2 \, dt \right] =\mathbb{E}\left[ \left( \int_0^T H^{(n)}_t \, dW_t - \int_0^T H^{(m)}_t \, dW_t \right)^2 \right]
+\]
+Because the left-hand side vanishes as $n,m \to \infty$, the sequences of random variables $Z_n = \int_0^T H^{(n)}_t \, dW_t$ and $Z_m = \int_0^T H^{(m)}_t \, dW_t$ are forced to form a corresponding Cauchy sequence inside the space of square integrable random variables $L^2(\Omega)$. 
+
+The space $L^2(\Omega)$ is called a \textit{Hilbert Space}.  A Hilbert space is a \textit{complete} inner product space.  Where complete intuitively means there are no "holes" in the space and mathematically means every Cauchy sequence converges to a point inside the space.  For an example of an incomplete space, consider the rational numbers whose Cauchy sequence $(1,1.4,1.41,1.412,...)$ approaches $\sqrt{2}$ a number outside the rationals.
+
+Thus, $\|Z_n - Z_m\|_{L^2}$ is a Cauchy sequence which converges to some square integrable random variable.  Therefore, for any $X \in \mathcal{H}^2[0,T]$ the approximating sequence results in a well-defined integral.
+
+\begin{definition}
+Let $X \in \mathcal{H}^2[0,T]$ be a bounded, sample-continuous process, and let $\{H^{(n)}\}$ be the simple predictable approximating sequence guaranteed by density of simple predictable processes (Proposition 4.2). The \textit{It\^o integral} of $X$ with respect to the Wiener process $W$ is defined as below:
+\[
+\int_0^T X_t \, dW_t = \lim_{n \to \infty} \int_0^T H^{(n)}_t \, dW_t
+\]
+\end{definition}
+
+\begin{theorem}[General It\^o Isometry]
+Let $X \in \mathcal{H}^2[0,T]$. Then the It\^o integral preserves the norm:
+\[
+\mathbb{E} \left[ \left(\int_0^T X_t \, dW_t \right)^2 \right] = \mathbb{E} \left[ \int_0^T X_t^2 \, dt \right]
+\]
+\end{theorem}
+
+\begin{proof}
+By the definition of It\^o integral:
+\[
+\mathbb{E} \left[ \left(\int_0^T X_t \, dW_t \right)^2 \right] = \lim_{n \to \infty} \mathbb{E} \left[ \left( \int_0^T H^{(n)}_t \, dW_t \right)^2 \right]
+\]
+Then, by the It\^o isometry of simple processes (Theorem 4.1):
+\[
+\lim_{n \to \infty} \mathbb{E} \left[ \left( \int_0^T H^{(n)}_t \, dW_t \right)^2 \right] = \lim_{n \to \infty}\mathbb{E} \left[ \int_0^T \left( H_t^{(n)} \right)^2 \, dt \right]
+\]
+By the density of simple processes (Proposition 4.2):
+\[
+\lim_{n \to \infty}\mathbb{E} \left[ \int_0^T \left( H_t^{(n)} \right)^2 \, dt \right] = \mathbb{E} \left[ \int_0^T X_t^2 \, dt \right]
+\]
+Therefore,
+\[
+\mathbb{E} \left[ \left(\int_0^T X_t \, dW_t \right)^2 \right] = \mathbb{E} \left[ \int_0^T X_t^2 \, dt \right]
+\]
+\end{proof}
+
+We have now defined the It\^o integral and have a general isometry between the restricted subspace of bounded sample-continuous elements of $\mathcal{H}^2[0,T]$ and $L^2(\Omega)$; however, we still lack a stochastic counterpart of the Fundamental Theorem of Calculus.  The purpose of the next sub-section is to introduce this stochastic counterpart to allow us to transition from the theory behind stochastic integration to real computations.
+
+\subsection{It\^o's Lemma}
+
+To evaluate stochastic integrals, we first define a broader class of time-varying random variables than previously discussed.  The below can be thought of as a sort of generalization to Wiener processes.
+
+\begin{definition}
+Let $\{W_t\}_{t \in [0,T]}$ be a standard Wiener process. An \textit{It\^o process} is a continuous adapted stochastic process $X_t$ that has the integral form:
+\[
+X_t = X_0 + \int_0^t\mu_s \, ds + \int_0^t \sigma_s dW_s
+\]
+where $\mu_s$ is path-wise integrable and $\sigma_s$ is square integrable.  This process can be written in differential form as shown below.
+\[
+dX_t = \mu_t \, dt + \sigma_t \, dW_t.
+\]
+\end{definition}
+
+Another essential stochastic process to define is the stochastic equivalent to a constant expectation.  This process would have a constant expectation given an initial filtration, motivating the following definition.
+
+\begin{definition}
+Let $\{ M_t\}_{t \geq 0}$ be an adapted stochastic process to the filtered probability space $(\Omega, \mathcal{F}, \{\mathcal{F}_t\}_{t \geq 0}, P)$.  $\{ M_t\}_{t \geq 0}$ is called a \textit{martingale} with respect to $\{\mathcal{F}_t\}_{t \geq 0}$ if it satisfies:
+\begin{enumerate}[label=(\roman*)]
+    \item $\mathbb{E} [|M_t|] <\infty$
+    \item For all $s < t,$
+    $ E [M_t\,|\, \mathcal{F}_s] = M_s \quad \text{almost surely}$
+\end{enumerate}
+\end{definition}
+
+\begin{proposition}
+Let $X_t \in  \mathcal{H}^2[0,T]$ be a bounded path-continuous process adapted to the filtered space  $(\Omega, \mathcal{F}, \{\mathcal{F}_t\}_{t \geq 0}, P)$.  Then the stochastic integral process,
+\[
+M_t = \int_0^tX_sdW_s
+\]
+is a martingale with respect to $\{\mathcal{F}_t\}_{t \geq 0}$.
+\end{proposition}
+
+
+ A formal proof of Proposition 4.3 proceeds by first establishing the martingale property for the class of simple predictable processes, and subsequently extending the result to general integrands via a density argument.  The martingale property for the class of simple predictable processes can be proved by the properties of conditional expectation outlined in Proposition 4.1 and the independence of Wiener process increments.
+
+
+In classical calculus, some differentiable function $f(x,t)$ has a total differential given by the chain rule: 
+\[
+df = \frac{\partial f}{\partial x}dx + \frac{\partial f}{\partial t}dt
+\]
+However, because sample paths of Wiener processes possess non-zero quadratic variation ($\langle W \rangle_t = t$), second order Taylor expansion terms no longer vanish as $dt \to 0$.  This adjustment to the classical calculus framework comes in the form of It\^o's Lemma.
+
+\begin{theorem}[It\^o's Lemma]
+Let $X_t$ be an It\^o process of the form $dX_t = \mu_t \, dt + \sigma_t \, dW_t$. Let $f(t,x) \in C^{1,2}([0,T] \times \mathbb{R})$. Then $Y_t = f(t, X_t)$ is also an It\^o process, and its stochastic differential is given by:
+\[
+df(t, X_t) = \frac{\partial f}{\partial t}(t, X_t) \, dt + \frac{\partial f}{\partial x}(t, X_t) \, dX_t + \frac{1}{2} \frac{\partial^2 f}{\partial x^2}(t, X_t) \, (dX_t)^2
+\]
+where the second-order differential term $(dX_t)^2$ is computed by the below multiplication rules:
+\[
+dt \cdot dt = 0, \quad dt \cdot dW_t = 0, \quad dW_t \cdot dW_t = dt
+\]
+\end{theorem}
+
+\begin{remark}
+The proof of It\^os lemma is outside the scope of this paper.  We will still outline a proof sketch for a smooth function of Wiener processes $f(W_t)$; however, the below is heuristic rather than rigorous.  Asymptotic estimates and the $L^2$ convergence of quadratic variation would be required for a complete treatment. For a full proof see \cite{ItoProof}.
+\end{remark}
+
+ To begin, we represent the total change of the smooth function as a telescoping series across the partition intervals:
+\[
+f(W_T) - f(W_0) = \sum_{k=0}^{n-1}[f(W_{t_{k+1}})-f(W_{t_k})]
+\]
+
+We then Taylor expand the difference of each term inside the sum around $W_{t_{k}}$:
+\[
+f(W_{t_{k+1}})-f(W_{t_k}) = f'(W_{t_{k}})\Delta W_k + \frac{1}{2}f''(W_{t_{k}})\Delta W_k^2 + R_k
+\]
+where $\Delta W_k = W_{t_{k+1}}-W_{t_k}$ and $R_k$ is the remaining higher order terms of the Taylor expansion. Then taking the sum and using its linearity:
+\[
+f(W_T) - f(W_0) = \sum_{k=0}^{n-1}f'(W_{t_{k}})\Delta W_k + \frac{1}{2}\sum_{k=0}^{n-1}f''(W_{t_{k}})\Delta W_k^2 + \sum_{k=0}^{n-1}R_k
+\]
+Since, as shown in Section 3, $\Delta W_k \propto \sqrt{\Delta t}$.  Hence, for all $p \geq 3$ $(\Delta W_k)^p$ must be of smaller order than $\Delta t$ and thus vanish in the limit.  Consequently, all terms contained in the remainder $R_k$ must converge to zero.  Then the first order term must converge to some number by the definition of the It\^o integral.  Thus,
+\[
+f(W_T) - f(W_0) = \int_{0}^{T}f'(W_{t})dW_t + \frac{1}{2}\sum_{k=0}^{n-1}f''(W_{t_{k}})\Delta W_k^2 .
+\]
+To prove that,
+\[
+\lim_{n\to\infty}\sum_{k=0}^{n-1}f''(W_{t_{k}})\Delta W_k^2 =\int_0^Tf''(W_t)dt
+\]
+we then must show that the variance of the difference between the sum and the integral converges to zero.  To do so rigorously requires an understanding of undergraduate analysis applied to random variables, which concludes our proof sketch.
+
+From It\^o's Lemma, we can simply substitute the explicit components of $dX_t$ and apply the outlined multiplication rules to expand the lemma into its standard computational differential form:
+\[
+df(t, X_t) = \left( \frac{\partial f}{\partial t} + \mu_t \frac{\partial f}{\partial x} + \frac{1}{2} \sigma_t^2 \frac{\partial^2 f}{\partial x^2} \right) dt + \sigma_t \frac{\partial f}{\partial x} \, dW_t
+\]
+With a corresponding integral form:
+\[
+f(T,X_T) = f(0,X_0)+\int_0^T\left( \frac{\partial f}{\partial t} + \mu_t \frac{\partial f}{\partial x} + \frac{1}{2} \sigma_t^2 \frac{\partial^2 f}{\partial x^2}\right)\,dt + \int_0^T \sigma_t \frac{\partial f}{\partial x} \, dW_t
+\]
+
+There is a deep connection between this computational integral form of $f$ and the martingale property of stochastic integral processes.  Applying the conditional expectation given $\mathcal{F}_s$ for $s<T$ yields the following:
+\begin{align*}
+E[f(T,X_T) \mid \mathcal{F}_{s}] 
+    &= f(0,X_0) + E\left[\int_0^s\left(\text{Drift}\right)dt \,\middle|\, \mathcal{F}_{s}\right] + E\left[\int_s^T\left(\text{Drift}\right)dt \,\middle|\, \mathcal{F}_{s}\right] \\
+    &\quad + E\left[\int_0^s \sigma_t \frac{\partial f}{\partial x} \, dW_t \,\middle|\, \mathcal{F}_{s}\right] 
+    + E\left[\int_s^T \sigma_t \frac{\partial f}{\partial x} \, dW_t \,\middle|\, \mathcal{F}_{s}\right]
+\end{align*}
+By the martingale property of stochastic integral processes (Proposition 4.3):
+\[
+E \left[ \int_s^T \sigma_t \frac{\partial f}{\partial x} \, dW_t \, \middle| \, \mathcal{F}_{s} \right] =0
+\]
+We simplify the conditional expectation for all $\mathcal{F}_s$-measurable terms (Proposition 4.1 property (i)):
+\[
+E[f(T,X_T) \, \mid \, \mathcal{F}_{s}] = f(0,X_0)+\int_0^s\left( \text{Drift} \right)\,dt+\int_0^s \sigma_t \frac{\partial f}{\partial x} \, dW_t \, +E \left[ \int_s^T\left( \text{Drift} \right)\,dt \, \middle| \, \mathcal{F}_{s}\right] 
+\]
+We apply It\^o's Lemma over the sub-interval $[0,s]$:
+\[
+E[f(T,X_T) \, \mid \, \mathcal{F}_{s}] = f(s,X_s) + E \left[ \int_s^T\left( \text{Drift} \right)\,dt \, \middle| \, \mathcal{F_{s}}\right] 
+\]
+
+Thus, through the martingale property, expectation averages out the random fluctuations across all sample paths, leaving just the current value, and the deterministic drift integral.
+
+Note that by the above formula in order for the It\^o process $f(t,X_t)$ to be a martingale, the following must hold for all times $s \in [0,T]$ almost surely.
+\[
+E \left[ \int_s^T\left( \text{Drift} \right)\,dt \, \middle| \, \mathcal{F}_{s} \right] =0
+\]
+Which implies that $\text{Drift} =0$ or explicitly that
+\[
+ \frac{\partial f}{\partial t} + \mu_t \frac{\partial f}{\partial x} + \frac{1}{2} \sigma_t^2 \frac{\partial^2 f}{\partial x^2} = 0.
+\]
+And, note that this is just a classical deterministic PDE.
+
+
+\section{Applications}
+
+\subsection{Finance}
+
+The simplest model for an asset price should follow two properties: 1) the asset's value should always be positive, and 2) the asset's value should have stationary percentage returns.  Here, stationary means the increments' distribution do not change as a function of time.  Stock price percentage increments, however, are only quasi-stationary in the short term, not always stationary.  This always stationary assumption allows us to simplify the system.  Many later models, such as Jump-Diffusion and Stochastic-Volatility, account for this and other failures of the simple financial models we will discuss.  For more information on these see \cite{JumpDiff,StoVal}.
+
+The Brownian Motion we have dealt with up until now has been "arithmetic".  This implies the "geometric" equivalent would scale with the current value.  This "geometric" equivalent would be both always positive and have stationary percentage increments, not absolute increments, satisfying our desired properties.  A classical differential equation which scales with its own value would have the form:
+\[
+dS = \mu S_tdt
+\]
+And, the corresponding solution would be $S_t = S_0 e^{\mu t}$.  This is just an exponential growth function.  Thus, our "geometric" Brownian motion asks what happens when we add a noise factor proportional to the growth.
+
+\begin{definition}
+An It\^o process is classified as \textit{Geometric Brownian motion} (GBM) if it satisfies the following linear stochastic differential equation:
+\[
+dS_t = \mu S_t dt + \sigma S_t dW_t, \quad S_0 > 0
+\]
+\end{definition}
+
+The naive guess may be that $S_t = S_0 e^{\mu t + \sigma W_t}$; however, this is incorrect and assumes the classical chain rule providing instead the solution to the Stratonovich Stochastic differential equation, which will be discussed in the Physics section.  Instead, we use the stochastic chain rule, It\^o's Lemma.  Since $S_t$ is unknown, we want to pick some functional which neutralizes those terms, $f(t,x) = \ln(x)$.  The relevant partial derivatives are:
+\[
+\frac{\partial f}{\partial t} = 0 \quad \frac{\partial f}{\partial x} = \frac{1}{x} \quad \frac{\partial^2 f}{\partial x^2} = -\frac{1}{x^2}
+\]
+We apply It\^o's Lemma:
+\[
+d\ln(S_t) = \left( 0+\mu S_t \cdot \frac{1}{S_t} + \frac{1}{2}\sigma^2S_t^2\cdot  \left(- \frac{1}{S_t^2} \right) \right)dt + \sigma S_t \cdot \frac{1}{S_t}dW_t
+\]
+Thus,
+\[
+d\ln(S_t) = \left( \mu- \frac{\sigma^2}{2} \right)dt + \sigma dW_t
+\]
+We can then evaluate directly, and take the integral of both sides from $0$ to $T$:
+\[
+\ln(S_T) - \ln(S_0) = \left( \mu- \frac{\sigma^2}{2}\right)T + \sigma (W_T - W_0)
+\]
+A Wiener process starts at zero almost surely.  Thus $W_0 = 0$, and we can exponentiate both sides to yield:
+\[
+S_T = S_0 e^{\left( \mu- \frac{\sigma^2}{2}\right)T + \sigma W_T}
+\]
+
+We have now established that in our simplified model stock prices follow: 
+\[
+S_T = S_0 e^{\left( \mu- \frac{\sigma^2}{2}\right)T + \sigma W_T}
+\]
+We can now use this to price options.  We will deal specifically with European call options, which are a contract that gives the buyer the right, but not the obligation, to buy a stock at a predetermined strike price only on the expiration date.  In more mathematical terms, at an expiration date $T$ you can buy the stock for strike price $K$.  If $S_T>K$, you then exercise to make a profit, and if $S_T<K$, you don't.  Thus, the payoff of the option is $\max(S_T-K,0)$.  
+
+The Black-Scholes model (the simplified options pricing model we will use) assumes: 1) $S_T$ follows GBM, 2) risk-free rate (rate of return assuming zero risk) $r$ is constant, 3) no transaction costs or dividends (extra fees or profit that accumulate as time $t$ progress), 4) continuous trading is possible.
+
+To find the fair value $V(t, S_t)$ of a European call option prior to the expiration date ($t<T$), we use It\^o's Lemma:
+\[
+dV = \left( \frac{\partial V}{\partial t} + \mu S_t\frac{\partial V}{\partial S} + \frac{1}{2} \sigma^2S_t^2 \frac{\partial^2 V}{\partial S^2} \right) dt + \sigma S_t \frac{\partial V}{\partial S} \, dW_t
+\]
+We then define a portfolio $\Pi_t$ consisting of a long position in the option and a short position of $\Delta_t$ shares of the stock:
+\[
+\Pi_t = V(t, S_t) - \Delta_t S_t
+\]
+$V(t, S_t)$ varies proportionally to the price of $S_t$.  If $S_t$ increases so does $V(t, S_t)$, and vice versa.  The opposite is true for $\Delta_t S_t$.  We want to completely neutralize the microscopic gains decided by the random noise of $S_t$ by tuning $\Delta_t$.  By the definition of $\Pi_t$, $d\Pi_t = dV - \Delta_t dS_t$. Substituting the value of dV we get:
+
+\begin{align*}
+d\Pi_t &= \left( \frac{\partial V}{\partial t} + \mu S_t \frac{\partial V}{\partial S} + \frac{1}{2} \sigma^2 S_t^2 \frac{\partial^2 V}{\partial S^2} \right) dt + \sigma S_t \frac{\partial V}{\partial S} dW_t - \Delta_t \left( \mu S_t dt + \sigma S_t dW_t \right) \\[10pt]
+\intertext{Collecting the $dt$ and $dW_t$ terms yields:}
+d\Pi_t &= \left( \frac{\partial V}{\partial t} + \mu S_t \frac{\partial V}{\partial S} + \frac{1}{2} \sigma^2 S_t^2 \frac{\partial^2 V}{\partial S^2} - \Delta_t \mu S_t \right) dt + \sigma S_t \left( \frac{\partial V}{\partial S} - \Delta_t \right) dW_t
+\end{align*}
+
+Then, to tune $\Delta_t$ to cancel out the noise, we set the $dW_t$ term to zero, implying $\sigma S_t\left( \frac{\partial V}{\partial S} - \Delta_t \right) = 0$.  Thus, $\Delta_t = \frac{\partial V}{\partial S}$.
+
+Substituting this into the expression of $d\Pi_t$ we derive:
+
+\[
+d\Pi_t = \left( \frac{\partial V}{\partial t} + \frac{1}{2} \sigma^2 S_t^2 \frac{\partial^2 V}{\partial S^2} \right) dt
+\]
+Then, since we assumed the risk-free rate of return is constant, and our portfolio $\Pi_t$ is purely deterministic or risk free.
+\[
+d\Pi_t = r\Pi_tdt
+\]
+Hence, 
+\[
+\left( \frac{\partial V}{\partial t} + \frac{1}{2} \sigma^2 S_t^2 \frac{\partial^2 V}{\partial S^2} \right) dt = r\left(V - \frac{\partial V}{\partial S}S_t \right)dt
+\]
+Dividing by $dt$ and rearranging:
+\[
+ \frac{\partial V}{\partial t} + \frac{1}{2} \sigma^2 S_t^2 \frac{\partial^2 V}{\partial S^2}  + rS_t \frac{\partial V}{\partial S}- rV  = 0 \quad
+\]
+with terminal condition $V(T,S) = \max(S-K,0)$
+
+Note that, this is the exact same PDE derived at the end of Section 4 for a martingale process but with a $-rV$ term.
+
+You can solve this classical differential equation analytically a multitude of ways.  A common method is to use multi-variable calculus to reduce it to the heat equation and solve from there, as seen in \cite{BlackscholesPDE}.  Doing so provides the following formula:
+\[
+V(t, S_t) = S_t N(d_1) - K e^{-r(T-t)} N(d_2)
+\]
+where $N(\cdot)$ is the standard normal distribution function, and the scaling arguments are defined as:
+\[
+d_1 = \frac{\ln(S_t / K) + \left(r + \frac{\sigma^2}{2}\right)(T-t)}{\sigma \sqrt{T-t}}, \quad d_2 = d_1 - \sigma \sqrt{T-t}
+\]
+Deriving the price of a European call option through Black-Scholes concludes the finance application section.  Note that, this only barely scratches the surface of stochastic calculus's applications in finance.
+
+\subsection{Physics}
+
+Stochastic calculus is similarly ubiquitous across physics; for the sake of brevity, we will not derive these physical applications as we did for finance.
+
+The Stratonovich integral is another stochastic integral that serves as a counterpart to the It\^o integral, typically denoted as:
+\[
+\int X_t \circ dW_t
+\]
+The standard mathematical definition of the Stratonovich integral uses the average of the integrand at the endpoints of each sub-interval (the trapezoidal rule):
+\[
+\int_0^T X_t \circ dW_t = \lim_{\|\Pi\| \to 0} \sum_{i=0}^{n-1} \left( \frac{X_{t_i} + X_{t_{i+1}}}{2} \right) \left( W_{t_{i+1}} - W_{t_i} \right)
+\]
+
+Because the evaluation points in both formulations look forward into the sub-interval, the integrand is anticipating (i.e., it depends on the future path of the Wiener process past the starting time $t_i$). Consequently, the terms are not adapted to the natural filtration $\mathcal{F}_{t_i}$ at the left endpoint, meaning the Stratonovich integral is generally not a martingale. 
+
+The primary advantage of this symmetric formulation is that it restores the classical rules of calculus. If we Taylor expand a smooth function $f(W_t)$ around the midpoint state $W_{t_M}$ over the left and right half-intervals, the second-order quadratic variation terms emerge with opposite signs and cancel each other out in the limit. This cancellation of the second-order (It\^o) correction terms leaves only the first-order derivative term, allowing the standard Newton-Leibniz chain rule to hold. For more information on these differences, consult \cite{Stratonovich1, Stratonovich2}.
+
+The primary motivation for the Stratonovich integral in physics is a result of the Wong-Zakai Theorem.  In physics and engineering contexts, real noise is always smooth.  It is not infinitely jagged as in the case of Wiener processes, thus we can use classical calculus to solve the differential equations.  Wong-Zakai proposed a smooth approximation of Brownian motion $W_t^{\epsilon}$ where as the noise becomes sharper $\epsilon \to 0$ and $W_t^{\epsilon}$ converges to standard Brownian motion $W_t$.  They applied smooth Brownian motion to define a general smooth stochastic differential equation.  They later proved that every sequence of solutions $x_t^\epsilon$ converges to the solution of a Stratonovich stochastic differential equation, not an It\^o stochastic differential equation.  While Wong-Zakai always holds true, there are still many subfields of physics which require the It\^o integral and many subfields of math, which require the Stratonovich integral.
+
+To conclude, we introduce one concrete application of stochastic calculus in physics through the overdamped Langevin equation.  The overdamped Langevin equation models Brownian motion under some external potential (i.e. gravity spring energy) through the governing equation:
+\[
+dX_t = -\frac{1}{\gamma} \frac{\partial U}{\partial x} dt + \sigma(X_t) \circ dW_t
+\]
+where $\gamma$ represents the dampening coefficient, and the volatility $\sigma$ represents the thermal fluctuations of a particle across space.
+
+As a Stratonovich stochastic differential equation, the particles' velocities are predicted to follow a Maxwell-Boltzmann distribution which satisfies the laws of thermodynamics.  However, in It\^o form, additional drift terms appear under multiplicative noise, which violate the second law of thermodynamics unless corrected.  This result confirms the Wong-Zakai Theorem.
+
+\newpage
+
+\begin{thebibliography}{9}
+\bibitem{Abbott} \href{https://ndl.ethernet.edu.et/bitstream/123456789/88631/1/2015_Book_UnderstandingAnalysis.pdf}{Abbott S. Understanding analysis. 2nd ed. New York (NY): Springer; 2015.}
+
+\bibitem{InfiniteDescent} \href{https://infinitedescent.xyz/}{Newstead C. An Infinite Descent into Pure Mathematics [Internet]. 2024 [cited 2026 Jun 1].}
+
+\bibitem{CentralLimit} \href{https://stats.libretexts.org/Bookshelves/Probability_Theory/Probability_Mathematical_Statistics_and_Stochastic_Processes_(Siegrist)/06%3A_Random_Samples/6.04%3A_The_Central_Limit_Theorem}{Siegrist K. Probability, mathematical statistics, and stochastic processes [Internet]. Statistics LibreTexts; 2021 [cited 2026 Jun 1].}
+
+\bibitem{BorelCantelli} \href{https://www.ee.iitm.ac.in/~krishnaj/EE5110_files/notes/lecture10_bclemma.pdf}{Jagannathan K, Sharma A. Lecture 10: The Borel-Cantelli lemmas. EE5110: Probability Foundations for Electrical Engineers. Indian Institute of Technology Madras; 2015 [cited 2026 Jun 1].}
+
+\bibitem{ItoProof} \href{https://math.nyu.edu/~goodman/teaching/StochCalc2018/notes/Lesson4.pdf}{Goodman J. Lesson 4: Ito's lemma. In: Stochastic Calculus. New York (NY): Courant Institute of Mathematical Sciences, New York University; 2018 [cited 2026 Jun 1].}
+
+\bibitem{JumpDiff} \href{https://www.columbia.edu/~sk75/MagSci02.pdf}{Kou SG. A jump-diffusion model for option pricing. Management Science. 2002;48(8):1086–1101. doi:10.1287/mnsc.48.8.1086.166.}
+
+\bibitem{StoVal} \href{https://personal.ntu.edu.sg/nprivault/MA5182/stochastic-volatility.pdf}{Privault N. Notes on stochastic finance. Chapter 8, Stochastic volatility. Singapore: Nanyang Technological University; 2026 May 2.}
+
+\bibitem{BlackscholesPDE} \href{https://planetmath.org/analyticsolutionofblackscholespde}{Cheng S. Analytic solution of Black-Scholes partial differential equation. PlanetMath; 2013 Mar 22.}
+
+\bibitem{Stratonovich1} \href{https://en.wikipedia.org/wiki/Stratonovich_integral}{Wikipedia contributors. Stratonovich integral. In: Wikipedia, The Free Encyclopedia.}
+
+\bibitem{Stratonovich2} \href{https://ui.adsabs.harvard.edu/abs/1981JSP....24..175V/abstract}{Van Kampen NG. Itô versus Stratonovich. Journal of Statistical Physics. 1981;24(1):175–187. doi:10.1007/BF01007642.}
+
+\bibitem{Li} \href{https://math.pku.edu.cn/teachers/litj/notes/appl_stoch/lect11.pdf}{Li T. Lecture notes on stochastic process and Brownian motion. Lecture 11: Axiomatic construction of stochastic process. Beijing: Peking University, School of Mathematical Sciences; n.d.}
+
+\bibitem{O} \href{http://www.stat.ucla.edu/~ywu/research/documents/StochasticDifferentialEquations.pdf}{Øksendal B. Stochastic differential equations: an introduction with applications. 5th ed., corrected printing. Heidelberg/New York: Springer-Verlag; 1998.}
+
+\end{thebibliography}
+
+\end{document}
