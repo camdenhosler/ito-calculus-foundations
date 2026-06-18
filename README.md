@@ -1,6 +1,6 @@
 # Itos-Lemma
 
-Expository paper and numerical simulations exploring the measure-theoretic foundations of Itô's lemma. Proves the formula for smooth functions of standard Brownian motion under bounded second derivative, with Python visualizations of quadratic variation and geometric Brownian motion.
+Expository paper and numerical simulations exploring the measure-theoretic foundations of Itô's lemma. Outlines the proof of the formula for L2 integrable functions of standard Brownian motion, with Python visualizations of quadratic variation and geometric Brownian motion.
 
 ## Paper
 
