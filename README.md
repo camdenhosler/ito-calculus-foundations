@@ -1,22 +1,35 @@
-# Itos-Lemma
+# Itô's Lemma
 
-Expository paper and numerical simulations exploring the measure-theoretic foundations of Itô's lemma. Outlines the proof of the formula for L2 integrable functions of standard Brownian motion, with Python visualizations of quadratic variation and geometric Brownian motion.
+Expository paper and numerical simulations exploring the measure-theoretic
+foundations of Itô's lemma. Outlines the proof of general Itô isometry and
+Itô's Lemma for L2 integrable functions of standard Brownian motion, with
+Python visualizations of quadratic variation and geometric Brownian motion.
 
 ## Paper
 
-An expository paper on [Ito's Lemma] is available in [`paper/main.pdf`](paper/main.pdf).
+The full paper is available in [`paper/main.pdf`](paper/main.pdf). GitHub
+truncates PDFs longer than 5 pages so "see more" will have to be repeatedly
+clicked to view the full document in the GitHub interface.
+
 The LaTeX source is in [`paper/main.tex`](paper/main.tex).
+
+To recompile:
+```bash
+cd paper
+latexmk -pdf main.tex
+```
 
 ## Structure
 
 - `paper/` — LaTeX source and compiled PDF
-- `src/` — [brief description once written]
-- `simulations/` — [brief description once written]
-
-## Usage
-
-_To be added once simulations are written._
+- `simulations/` — Python scripts for quadratic variation and GBM visualizations
 
 ## Dependencies
 
-_To be added._
+**Paper:** TeX Live or MiKTeX (full install recommended).
+
+**Simulations:** To be added.
+
+## Usage
+
+To be added once simulations are written.
