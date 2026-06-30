@@ -3,7 +3,7 @@
 Expository paper and numerical simulations exploring the measure-theoretic
 foundations of Itô's lemma. Outlines the proof of general Itô isometry and
 Itô's Lemma for L2 integrable functions of standard Brownian motion, with
-Python visualizations of quadratic variation and geometric Brownian motion.
+Python visualizations of quadratic variation, random fields, and Fokker-Planck diffusion.
 
 ## Paper
 
