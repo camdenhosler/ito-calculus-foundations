@@ -22,11 +22,11 @@ latexmk -pdf main.tex
 ## Structure
 
 - `paper/` — LaTeX source and compiled PDF
-- `simulations/` — Python scripts for quadratic variation and GBM visualizations
+- `simulations/` — Python scripts for quadratic variation, random fields, and Fokker-Planck visualizations
 
 ## Dependencies
 
-**Paper:** TeX Live or MiKTeX (full install recommended).
+**Paper:** TeX Live or MiKTeX
 
 **Simulations:** To be added.
 
