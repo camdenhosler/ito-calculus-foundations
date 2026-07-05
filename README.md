@@ -1,4 +1,4 @@
-# Itô's Lemma
+# Itô Calculus Foundations
 
 Expository paper and numerical simulations exploring the measure-theoretic
 foundations of Itô's lemma. Outlines the proof of general Itô isometry and
