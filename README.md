@@ -1,8 +1,8 @@
 # Itô Calculus Foundations
 
 Expository paper and numerical simulations exploring the measure-theoretic
-foundations of Itô's lemma. Outlines the proof of general Itô isometry and
-Itô's Lemma for L2 integrable functions.
+foundations of Itô's lemma. Outlines the proof of general Itô isometry for L2 integrable functions and
+Itô's Lemma.
 
 <!--, with
 Python visualizations of quadratic variation, random fields, and Fokker-Planck diffusion. -->
